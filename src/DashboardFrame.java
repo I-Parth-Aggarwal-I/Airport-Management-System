@@ -264,7 +264,7 @@ public class DashboardFrame extends JFrame {
                 new String[] { "airport_id", "name", "city", "country", "iata_code" },
                 new String[] { "name", "city", "country", "iata_code" },
                 new String[] { "Airport Name", "City", "Country", "IATA Code" },
-                new Color(63, 81, 181), a, e, d);
+                5, new Color(63, 81, 181), a, e, d);
     }
 
     private ModuleConfig airlines(boolean a, boolean e, boolean d) {
@@ -274,47 +274,45 @@ public class DashboardFrame extends JFrame {
                 new String[] { "airline_id", "name", "iata_code" },
                 new String[] { "name", "iata_code" },
                 new String[] { "Airline Name", "IATA Code" },
-                new Color(0, 150, 136), a, e, d);
+                3, new Color(0, 150, 136), a, e, d);
     }
 
     private ModuleConfig aircraft(boolean a, boolean e, boolean d) {
         return new ModuleConfig("Aircraft", "✈", "Aircraft", "aircraft_id",
-                "SELECT ac.aircraft_id,ac.model,ac.capacity,ac.airline_id,al.name AS airline_name" +
+                "SELECT ac.aircraft_id,ac.model,ac.capacity,ac.airline_id,al.name AS airline_name,al.iata_code AS airline_iata" +
                         " FROM Aircraft ac LEFT JOIN Airline al ON ac.airline_id=al.airline_id",
-                new String[] { "ID", "Model", "Capacity", "Airline ID", "Airline" },
-                new String[] { "aircraft_id", "model", "capacity", "airline_id", "airline_name" },
+                new String[] { "ID", "Model", "Capacity", "Airline ID", "Airline", "Airline IATA" },
+                new String[] { "aircraft_id", "model", "capacity", "airline_id", "airline_name", "airline_iata" },
                 new String[] { "model", "capacity", "airline_id" },
                 new String[] { "Model", "Capacity", "Airline ID" },
-                new Color(33, 150, 243), a, e, d);
+                5, new Color(33, 150, 243), a, e, d);
     }
 
     private ModuleConfig gates(boolean a, boolean e, boolean d) {
         return new ModuleConfig("Gates", "🚪", "Gate", "gate_id",
                 "SELECT gate_id,terminal,gate_number FROM Gate",
                 new String[] { "ID", "Terminal", "Gate No" },
-                new String[] { "gate_id", "terminal", "gate_number" },
-                new String[] { "terminal", "gate_number" },
-                new String[] { "Terminal", "Gate Number" },
-                new Color(156, 39, 176), a, e, d);
+                new String[] { "gate_id", "terminal", "gate_number", "airline_name", "airline_iata" },
+                new String[] { "terminal", "gate_number", "airline_name", "airline_iata" },
+                new String[] { "Terminal", "Gate Number", "Airline Name", "Airline IATA" },
+                3, new Color(156, 39, 176), a, e, d);
     }
 
     private ModuleConfig flights(boolean a, boolean e, boolean d, String extra) {
         String q = "SELECT f.flight_id,f.flight_number,f.departure_time,f.arrival_time,f.status," +
-                "f.aircraft_id,a1.iata_code AS src,a2.iata_code AS dst,f.gate_id" +
+                "f.aircraft_id,a1.iata_code AS src,a2.iata_code AS dst,f.gate_id,ac.model,ac.capacity,a1.name AS src_name,a1.city AS src_city,a2.name AS dst_name,a2.city AS dst_city,g.terminal,g.gate_number,al.name AS airline_name,al.iata_code AS airline_iata" +
                 " FROM Flight f" +
                 " LEFT JOIN Airport a1 ON f.source_airport=a1.airport_id" +
                 " LEFT JOIN Airport a2 ON f.destination_airport=a2.airport_id" +
+                " LEFT JOIN Aircraft ac ON f.aircraft_id=ac.aircraft_id LEFT JOIN Gate g ON f.gate_id=g.gate_id LEFT JOIN Airline al ON ac.airline_id=al.airline_id" +
                 (extra != null ? " " + extra : "");
         return new ModuleConfig("Flights", "✈️", "Flight", "flight_id", q,
-                new String[] { "ID", "Flight No", "Departure", "Arrival", "Status", "Aircraft ID", "From", "To",
-                        "Gate ID" },
-                new String[] { "flight_id", "flight_number", "departure_time", "arrival_time", "status", "aircraft_id",
-                        "src", "dst", "gate_id" },
+                new String[] { "ID", "Flight No", "Departure", "Arrival", "Status", "Aircraft ID", "From", "To", "Gate ID", "Aircraft Model", "Aircraft Capacity", "Source Airport", "Source City", "Dest Airport", "Dest City", "Terminal", "Gate Number", "Airline Name", "Airline IATA" },
+                new String[] { "flight_id", "flight_number", "departure_time", "arrival_time", "status", "aircraft_id", "src", "dst", "gate_id", "model", "capacity", "src_name", "src_city", "dst_name", "dst_city", "terminal", "gate_number", "airline_name", "airline_iata" },
                 new String[] { "flight_number", "departure_time", "arrival_time", "status", "aircraft_id",
                         "source_airport", "destination_airport", "gate_id" },
-                new String[] { "Flight Number", "Departure (YYYY-MM-DD HH:MM:SS)", "Arrival (YYYY-MM-DD HH:MM:SS)",
-                        "Status", "Aircraft ID", "Source Airport ID", "Destination Airport ID", "Gate ID" },
-                new Color(233, 30, 99), a, e, d);
+                new String[] { "Flight Number", "Departure (YYYY-MM-DD HH:MM:SS)", "Arrival (YYYY-MM-DD HH:MM:SS)", "Status", "Aircraft ID", "Source Airport ID", "Destination Airport ID", "Gate ID" },
+                9, new Color(233, 30, 99), a, e, d);
     }
 
     private ModuleConfig passengers(boolean a, boolean e, boolean d) {
@@ -324,93 +322,92 @@ public class DashboardFrame extends JFrame {
                 new String[] { "passenger_id", "first_name", "last_name", "passport_no", "email" },
                 new String[] { "first_name", "last_name", "passport_no", "email" },
                 new String[] { "First Name", "Last Name", "Passport No", "Email" },
-                new Color(255, 87, 34), a, e, d);
+                5, new Color(255, 87, 34), a, e, d);
     }
 
     private ModuleConfig bookings(boolean a, boolean e, boolean d, String filter) {
-        String q = "SELECT b.booking_id,b.booking_reference,b.status,b.passenger_id,b.flight_id,f.flight_number" +
-                " FROM Booking b LEFT JOIN Flight f ON b.flight_id=f.flight_id" + (filter != null ? " " + filter : "");
+        String q = "SELECT b.booking_id,b.booking_reference,b.status,b.passenger_id,b.flight_id,f.flight_number,p.first_name,p.last_name,p.passport_no,p.email,f.departure_time,f.status AS flight_status,ac.model,al.name AS airline_name,a1.name AS src_name,a2.name AS dst_name" +
+                " FROM Booking b LEFT JOIN Flight f ON b.flight_id=f.flight_id LEFT JOIN Passenger p ON b.passenger_id=p.passenger_id LEFT JOIN Aircraft ac ON f.aircraft_id=ac.aircraft_id LEFT JOIN Airline al ON ac.airline_id=al.airline_id LEFT JOIN Airport a1 ON f.source_airport=a1.airport_id LEFT JOIN Airport a2 ON f.destination_airport=a2.airport_id" + (filter != null ? " " + filter : "");
         return new ModuleConfig("Bookings", "📋", "Booking", "booking_id", q,
-                new String[] { "ID", "Reference", "Status", "Passenger ID", "Flight ID", "Flight No" },
-                new String[] { "booking_id", "booking_reference", "status", "passenger_id", "flight_id",
-                        "flight_number" },
+                new String[] { "ID", "Reference", "Status", "Passenger ID", "Flight ID", "Flight No", "Passenger First Name", "Passenger Last Name", "Passport No", "Email", "Departure Time", "Flight Status", "Aircraft Model", "Airline Name", "Source Airport", "Dest Airport" },
+                new String[] { "booking_id", "booking_reference", "status", "passenger_id", "flight_id", "flight_number", "first_name", "last_name", "passport_no", "email", "departure_time", "flight_status", "model", "airline_name", "src_name", "dst_name" },
                 new String[] { "booking_reference", "status", "passenger_id", "flight_id" },
                 new String[] { "Booking Reference", "Status (Confirmed/Cancelled)", "Passenger ID", "Flight ID" },
-                new Color(255, 152, 0), a, e, d);
+                6, new Color(255, 152, 0), a, e, d);
     }
 
     private ModuleConfig tickets(boolean a, boolean e, boolean d, String filter) {
-        String q = "SELECT t.ticket_id,t.booking_id,t.passenger_id,t.seat_id,t.price,s.seat_number" +
-                " FROM Ticket t LEFT JOIN Seat s ON t.seat_id=s.seat_id" + (filter != null ? " " + filter : "");
+        String q = "SELECT t.ticket_id,t.booking_id,t.passenger_id,t.seat_id,t.price,s.seat_number,b.booking_reference,p.first_name,p.last_name,ac.model,al.name AS airline_name,f.flight_number,a1.name AS src_name,a2.name AS dst_name" +
+                " FROM Ticket t LEFT JOIN Seat s ON t.seat_id=s.seat_id LEFT JOIN Booking b ON t.booking_id=b.booking_id LEFT JOIN Passenger p ON t.passenger_id=p.passenger_id LEFT JOIN Aircraft ac ON s.aircraft_id=ac.aircraft_id LEFT JOIN Airline al ON ac.airline_id=al.airline_id LEFT JOIN Flight f ON b.flight_id=f.flight_id LEFT JOIN Airport a1 ON f.source_airport=a1.airport_id LEFT JOIN Airport a2 ON f.destination_airport=a2.airport_id" + (filter != null ? " " + filter : "");
         return new ModuleConfig("Tickets", "🎫", "Ticket", "ticket_id", q,
-                new String[] { "ID", "Booking ID", "Passenger ID", "Seat ID", "Price", "Seat No" },
-                new String[] { "ticket_id", "booking_id", "passenger_id", "seat_id", "price", "seat_number" },
+                new String[] { "ID", "Booking ID", "Passenger ID", "Seat ID", "Price", "Seat No", "Booking Ref", "Passenger First Name", "Passenger Last Name", "Aircraft Model", "Airline Name", "Flight No", "Source Airport", "Dest Airport" },
+                new String[] { "ticket_id", "booking_id", "passenger_id", "seat_id", "price", "seat_number", "booking_reference", "first_name", "last_name", "model", "airline_name", "flight_number", "src_name", "dst_name" },
                 new String[] { "booking_id", "passenger_id", "seat_id", "price" },
                 new String[] { "Booking ID", "Passenger ID", "Seat ID", "Price" },
-                new Color(0, 188, 212), a, e, d);
+                6, new Color(0, 188, 212), a, e, d);
     }
 
     private ModuleConfig payments(boolean a, boolean e, boolean d, String filter) {
-        String q = "SELECT payment_id,booking_id,amount,payment_status FROM Payment"
+        String q = "SELECT p.payment_id,p.booking_id,p.amount,p.payment_status,b.booking_reference,pass.first_name,pass.last_name,f.flight_number,ac.model,al.name AS airline_name FROM Payment p LEFT JOIN Booking b ON p.booking_id=b.booking_id LEFT JOIN Passenger pass ON b.passenger_id=pass.passenger_id LEFT JOIN Flight f ON b.flight_id=f.flight_id LEFT JOIN Aircraft ac ON f.aircraft_id=ac.aircraft_id LEFT JOIN Airline al ON ac.airline_id=al.airline_id"
                 + (filter != null ? " " + filter : "");
         return new ModuleConfig("Payments", "💳", "Payment", "payment_id", q,
-                new String[] { "ID", "Booking ID", "Amount", "Status" },
-                new String[] { "payment_id", "booking_id", "amount", "payment_status" },
+                new String[] { "ID", "Booking ID", "Amount", "Status", "Booking Ref", "Passenger First Name", "Passenger Last Name", "Flight No", "Aircraft Model", "Airline Name" },
+                new String[] { "payment_id", "booking_id", "amount", "payment_status", "booking_reference", "first_name", "last_name", "flight_number", "model", "airline_name" },
                 new String[] { "booking_id", "amount", "payment_status" },
                 new String[] { "Booking ID", "Amount", "Status (Paid/Pending/Failed)" },
-                new Color(76, 175, 80), a, e, d);
+                4, new Color(76, 175, 80), a, e, d);
     }
 
     private ModuleConfig baggage(boolean a, boolean e, boolean d, String filter) {
-        String q = "SELECT baggage_id,ticket_id,weight FROM Baggage" + (filter != null ? " " + filter : "");
+        String q = "SELECT bg.baggage_id,bg.ticket_id,bg.weight,t.booking_id,b.booking_reference,p.first_name,p.last_name,f.flight_number,ac.model,al.name AS airline_name FROM Baggage bg LEFT JOIN Ticket t ON bg.ticket_id=t.ticket_id LEFT JOIN Booking b ON t.booking_id=b.booking_id LEFT JOIN Passenger p ON b.passenger_id=p.passenger_id LEFT JOIN Aircraft ac ON f.aircraft_id=ac.aircraft_id LEFT JOIN Airline al ON ac.airline_id=al.airline_id LEFT JOIN Airport a1 ON f.source_airport=a1.airport_id LEFT JOIN Airport a2 ON f.destination_airport=a2.airport_id" + (filter != null ? " " + filter : "");
         return new ModuleConfig("Baggage", "🧳", "Baggage", "baggage_id", q,
-                new String[] { "ID", "Ticket ID", "Weight (kg)" },
-                new String[] { "baggage_id", "ticket_id", "weight" },
+                new String[] { "ID", "Ticket ID", "Weight (kg)", "Booking ID", "Booking Ref", "Passenger First Name", "Passenger Last Name", "Flight No", "Aircraft Model", "Airline Name" },
+                new String[] { "baggage_id", "ticket_id", "weight", "booking_id", "booking_reference", "first_name", "last_name", "flight_number", "model", "airline_name" },
                 new String[] { "ticket_id", "weight" },
                 new String[] { "Ticket ID", "Weight (kg)" },
-                new Color(121, 85, 72), a, e, d);
+                3, new Color(121, 85, 72), a, e, d);
     }
 
     private ModuleConfig seats(boolean a, boolean e, boolean d) {
         return new ModuleConfig("Seats", "💺", "Seat", "seat_id",
-                "SELECT s.seat_id,s.aircraft_id,s.seat_number,ac.model FROM Seat s LEFT JOIN Aircraft ac ON s.aircraft_id=ac.aircraft_id",
-                new String[] { "ID", "Aircraft ID", "Seat No", "Aircraft" },
-                new String[] { "seat_id", "aircraft_id", "seat_number", "model" },
+                "SELECT s.seat_id,s.aircraft_id,s.seat_number,ac.model,ac.capacity,al.name AS airline_name FROM Seat s LEFT JOIN Aircraft ac ON s.aircraft_id=ac.aircraft_id LEFT JOIN Airline al ON ac.airline_id=al.airline_id",
+                new String[] { "ID", "Aircraft ID", "Seat No", "Aircraft", "Capacity", "Airline" },
+                new String[] { "seat_id", "aircraft_id", "seat_number", "model", "capacity", "airline_name" },
                 new String[] { "aircraft_id", "seat_number" },
                 new String[] { "Aircraft ID", "Seat Number" },
-                new Color(96, 125, 139), a, e, d);
+                4, new Color(96, 125, 139), a, e, d);
     }
 
     private ModuleConfig airportStaff(boolean a, boolean e, boolean d) {
         return new ModuleConfig("Airport Staff", "👷", "AirportStaff", "staff_id",
-                "SELECT ast.staff_id,ast.first_name,ast.last_name,ast.role,ast.airport_id,ap.name AS airport_name" +
+                "SELECT ast.staff_id,ast.first_name,ast.last_name,ast.role,ast.airport_id,ap.name AS airport_name,ap.city,ap.country,ap.iata_code" +
                         " FROM AirportStaff ast LEFT JOIN Airport ap ON ast.airport_id=ap.airport_id",
-                new String[] { "ID", "First Name", "Last Name", "Role", "Airport ID", "Airport" },
-                new String[] { "staff_id", "first_name", "last_name", "role", "airport_id", "airport_name" },
+                new String[] { "ID", "First Name", "Last Name", "Role", "Airport ID", "Airport", "City", "Country", "IATA" },
+                new String[] { "staff_id", "first_name", "last_name", "role", "airport_id", "airport_name", "city", "country", "iata_code" },
                 new String[] { "first_name", "last_name", "role", "airport_id" },
                 new String[] { "First Name", "Last Name", "Role", "Airport ID" },
-                new Color(63, 81, 181), a, e, d);
+                6, new Color(63, 81, 181), a, e, d);
     }
 
     private ModuleConfig flightStaff(boolean a, boolean e, boolean d) {
         return new ModuleConfig("Flight Staff", "👨‍✈️", "FlightStaff", "staff_id",
-                "SELECT fs.staff_id,fs.first_name,fs.last_name,fs.role,fs.flight_id,f.flight_number" +
-                        " FROM FlightStaff fs LEFT JOIN Flight f ON fs.flight_id=f.flight_id",
-                new String[] { "ID", "First Name", "Last Name", "Role", "Flight ID", "Flight No" },
-                new String[] { "staff_id", "first_name", "last_name", "role", "flight_id", "flight_number" },
+                "SELECT fs.staff_id,fs.first_name,fs.last_name,fs.role,fs.flight_id,f.flight_number,f.departure_time,f.status AS flight_status,ac.model,al.name AS airline_name,a1.name AS src_name,a2.name AS dst_name" +
+                        " FROM FlightStaff fs LEFT JOIN Flight f ON fs.flight_id=f.flight_id LEFT JOIN Aircraft ac ON f.aircraft_id=ac.aircraft_id LEFT JOIN Airline al ON ac.airline_id=al.airline_id LEFT JOIN Airport a1 ON f.source_airport=a1.airport_id LEFT JOIN Airport a2 ON f.destination_airport=a2.airport_id",
+                new String[] { "ID", "First Name", "Last Name", "Role", "Flight ID", "Flight No", "Departure Time", "Flight Status", "Aircraft Model", "Airline Name", "Source Airport", "Dest Airport" },
+                new String[] { "staff_id", "first_name", "last_name", "role", "flight_id", "flight_number", "departure_time", "flight_status", "model", "airline_name", "src_name", "dst_name" },
                 new String[] { "first_name", "last_name", "role", "flight_id" },
                 new String[] { "First Name", "Last Name", "Role", "Flight ID" },
-                new Color(0, 150, 136), a, e, d);
+                6, new Color(0, 150, 136), a, e, d);
     }
 
     private ModuleConfig users() {
         return new ModuleConfig("Users", "🔑", "Login", "login_id",
-                "SELECT login_id,username,role,passenger_id,flight_staff_id,airport_staff_id FROM Login",
-                new String[] { "ID", "Username", "Role", "Passenger ID", "Flight Staff ID", "Airport Staff ID" },
-                new String[] { "login_id", "username", "role", "passenger_id", "flight_staff_id", "airport_staff_id" },
+                "SELECT l.login_id,l.username,l.role,l.passenger_id,l.flight_staff_id,l.airport_staff_id,p.first_name AS pass_fname,fs.first_name AS fs_fname,ast.first_name AS ast_fname,f.flight_number AS fs_flight_no,ap.name AS ast_airport_name FROM Login l LEFT JOIN Passenger p ON l.passenger_id=p.passenger_id LEFT JOIN FlightStaff fs ON l.flight_staff_id=fs.staff_id LEFT JOIN AirportStaff ast ON l.airport_staff_id=ast.staff_id LEFT JOIN Flight f ON fs.flight_id=f.flight_id LEFT JOIN Airport ap ON ast.airport_id=ap.airport_id",
+                new String[] { "ID", "Username", "Role", "Passenger ID", "Flight Staff ID", "Airport Staff ID", "Passenger Name", "Flight Staff Name", "Airport Staff Name", "Flight Staff Flight No", "Airport Staff Airport Name" },
+                new String[] { "login_id", "username", "role", "passenger_id", "flight_staff_id", "airport_staff_id", "pass_fname", "fs_fname", "ast_fname", "fs_flight_no", "ast_airport_name" },
                 new String[] { "username", "password", "role", "passenger_id", "flight_staff_id", "airport_staff_id" },
                 new String[] { "Username", "Password", "Role", "Passenger ID", "Flight Staff ID", "Airport Staff ID" },
-                new Color(103, 58, 183), true, true, true);
+                6, new Color(103, 58, 183), true, true, true);
     }
 
     private JButton makeFlatBtn(String text) {

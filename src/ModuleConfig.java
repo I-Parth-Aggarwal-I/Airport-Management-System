@@ -13,6 +13,7 @@ public class ModuleConfig {
     public final String[] columnDbNames;   
     public final String[] editableColumns; 
     public final String[] editableHeaders; 
+    public final int      displayColumnCount;
     public final Color    color;
     public final boolean  canAdd;
     public final boolean  canEdit;
@@ -22,7 +23,7 @@ public class ModuleConfig {
                         String selectQuery,
                         String[] columnHeaders, String[] columnDbNames,
                         String[] editableColumns, String[] editableHeaders,
-                        Color color,
+                        int displayColumnCount, Color color,
                         boolean canAdd, boolean canEdit, boolean canDelete) {
         this.title           = title;
         this.icon            = icon;
@@ -33,6 +34,7 @@ public class ModuleConfig {
         this.columnDbNames   = columnDbNames;
         this.editableColumns = editableColumns;
         this.editableHeaders = editableHeaders;
+        this.displayColumnCount = displayColumnCount;
         this.color           = color;
         this.canAdd          = canAdd;
         this.canEdit         = canEdit;

@@ -124,6 +124,49 @@ public class DataTableFrame extends JFrame {
 
         p.add(lbl("Value:"));
         searchTf = new JTextField();
+        
+        colBox.addActionListener(e -> {
+            int idx = colBox.getSelectedIndex();
+            if (idx < 0) return;
+            boolean isNative = idx < cfg.displayColumnCount;
+            String currentOp = (String) opBox.getSelectedItem();
+            opBox.removeAllItems();
+            opBox.addItem("Contains");
+            opBox.addItem("Equals");
+            opBox.addItem("Starts With");
+            opBox.addItem("Ends With");
+            opBox.addItem("Greater Than");
+            opBox.addItem("Less Than");
+            if (isNative) {
+                opBox.addItem("Hide Column");
+            } else {
+                opBox.addItem("Show Column");
+            }
+            if (currentOp != null) {
+                for (int i=0; i<opBox.getItemCount(); i++) {
+                    if (opBox.getItemAt(i).equals(currentOp)) {
+                        opBox.setSelectedIndex(i);
+                        break;
+                    }
+                }
+            }
+        });
+
+        opBox.addActionListener(e -> {
+            String op = (String) opBox.getSelectedItem();
+            if ("Hide Column".equals(op) || "Show Column".equals(op)) {
+                searchTf.setEnabled(false);
+                searchTf.setText("");
+            } else {
+                searchTf.setEnabled(true);
+            }
+        });
+
+        // Trigger initial setup
+        if (colBox.getItemCount() > 0) {
+            colBox.setSelectedIndex(0);
+        }
+
         searchTf.setPreferredSize(new Dimension(185, 30));
         searchTf.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         p.add(searchTf);
@@ -172,6 +215,8 @@ public class DataTableFrame extends JFrame {
         table.getTableHeader().setForeground(C_PRIMARY);
         table.getTableHeader().setPreferredSize(new Dimension(0, 36));
         table.getTableHeader().setReorderingAllowed(false);
+
+        updateVisibleColumns();
 
         table.getTableHeader().addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
@@ -290,25 +335,36 @@ public class DataTableFrame extends JFrame {
 
     private void addSearchTag() {
         String val = searchTf.getText().trim();
-        if (val.isEmpty())
+        String op = (String) opBox.getSelectedItem();
+        if (op == null) return;
+        
+        if (!op.equals("Hide Column") && !op.equals("Show Column") && val.isEmpty())
             return;
 
         int colIdx = colBox.getSelectedIndex();
         String colName = (String) colBox.getSelectedItem();
-        String op = (String) opBox.getSelectedItem();
+
+        for (SearchTag t : activeTags) {
+            if (t.colIdx == colIdx && t.operator.equals(op) && t.value.equals(val)) return;
+        }
 
         SearchTag tag = new SearchTag(colIdx, colName, op, val);
         activeTags.add(tag);
         searchTf.setText("");
 
         renderTags();
-        applyFilters();
+        if (op.equals("Hide Column") || op.equals("Show Column")) {
+            updateVisibleColumns();
+        } else {
+            applyFilters();
+        }
     }
 
     private void clearAllTags() {
         activeTags.clear();
         searchTf.setText("");
         renderTags();
+        updateVisibleColumns();
         applyFilters();
     }
 
@@ -322,7 +378,10 @@ public class DataTableFrame extends JFrame {
                     BorderFactory.createLineBorder(new Color(210, 220, 230), 1, true),
                     new EmptyBorder(2, 4, 2, 4)));
 
-            JLabel lbl = new JLabel("+ " + tag.colName + " " + tag.operator + " " + tag.value);
+            String txt = tag.operator.equals("Hide Column") || tag.operator.equals("Show Column")
+                    ? tag.operator + ": " + tag.colName
+                    : tag.colName + " " + tag.operator + " " + tag.value;
+            JLabel lbl = new JLabel("+ " + txt);
             lbl.setFont(new Font("Segoe UI", Font.PLAIN, 12));
             lbl.setForeground(new Color(13, 71, 161));
 
@@ -334,7 +393,11 @@ public class DataTableFrame extends JFrame {
                 public void mouseClicked(java.awt.event.MouseEvent e) {
                     activeTags.remove(tag);
                     renderTags();
-                    applyFilters();
+                    if (tag.operator.equals("Hide Column") || tag.operator.equals("Show Column")) {
+                        updateVisibleColumns();
+                    } else {
+                        applyFilters();
+                    }
                 }
 
                 public void mouseEntered(java.awt.event.MouseEvent e) {
@@ -352,6 +415,30 @@ public class DataTableFrame extends JFrame {
         }
         tagsPanel.revalidate();
         tagsPanel.repaint();
+    }
+
+    private void updateVisibleColumns() {
+        javax.swing.table.DefaultTableColumnModel cm = new javax.swing.table.DefaultTableColumnModel();
+        for (int i = 0; i < cfg.columnHeaders.length; i++) {
+            boolean isNative = i < cfg.displayColumnCount;
+            boolean isExplicitlyHidden = false;
+            boolean isExplicitlyShown = false;
+            for (SearchTag t : activeTags) {
+                if (t.colIdx == i) {
+                    if (t.operator.equals("Hide Column")) isExplicitlyHidden = true;
+                    if (t.operator.equals("Show Column")) isExplicitlyShown = true;
+                }
+            }
+            
+            boolean shouldShow = (isNative && !isExplicitlyHidden) || (!isNative && isExplicitlyShown);
+            if (shouldShow) {
+                javax.swing.table.TableColumn col = new javax.swing.table.TableColumn(i);
+                col.setHeaderValue(cfg.columnHeaders[i]);
+                cm.addColumn(col);
+            }
+        }
+        table.setColumnModel(cm);
+        table.getTableHeader().repaint();
     }
 
     private void applyFilters() {
@@ -382,6 +469,7 @@ public class DataTableFrame extends JFrame {
                 List<SearchTag> rangeTags = new ArrayList<>();
                 List<SearchTag> matchTags = new ArrayList<>();
                 for (SearchTag tag : colTags) {
+                    if (tag.operator.equals("Hide Column") || tag.operator.equals("Show Column")) continue;
                     if (tag.operator.equals("Greater Than") || tag.operator.equals("Less Than")) {
                         rangeTags.add(tag);
                     } else {
