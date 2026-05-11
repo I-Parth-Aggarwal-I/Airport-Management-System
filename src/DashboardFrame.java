@@ -381,13 +381,13 @@ public class DashboardFrame extends JFrame {
     }
 
     private ModuleConfig baggage(boolean a, boolean e, boolean d, String filter) {
-        String q = "SELECT bg.baggage_id,bg.ticket_id,bg.weight,t.booking_id,b.booking_reference,p.first_name,p.last_name,f.flight_number,ac.model,al.name AS airline_name FROM Baggage bg LEFT JOIN Ticket t ON bg.ticket_id=t.ticket_id LEFT JOIN Booking b ON t.booking_id=b.booking_id LEFT JOIN Passenger p ON b.passenger_id=p.passenger_id LEFT JOIN Aircraft ac ON f.aircraft_id=ac.aircraft_id LEFT JOIN Airline al ON ac.airline_id=al.airline_id LEFT JOIN Airport a1 ON f.source_airport=a1.airport_id LEFT JOIN Airport a2 ON f.destination_airport=a2.airport_id"
+        String q = "SELECT bg.baggage_id,bg.ticket_id,bg.weight,t.booking_id,b.booking_reference,p.first_name,p.last_name FROM Baggage bg LEFT JOIN Ticket t ON bg.ticket_id=t.ticket_id LEFT JOIN Booking b ON t.booking_id=b.booking_id LEFT JOIN Passenger p ON b.passenger_id=p.passenger_id"
                 + (filter != null ? " " + filter : "");
         return new ModuleConfig("Baggage", "🧳", "Baggage", "baggage_id", q,
                 new String[] { "ID", "Ticket ID", "Weight (kg)", "Booking ID", "Booking Ref", "Passenger First Name",
-                        "Passenger Last Name", "Flight No", "Aircraft Model", "Airline Name" },
+                        "Passenger Last Name" },
                 new String[] { "baggage_id", "ticket_id", "weight", "booking_id", "booking_reference", "first_name",
-                        "last_name", "flight_number", "model", "airline_name" },
+                        "last_name"},
                 new String[] { "ticket_id", "weight" },
                 new String[] { "Ticket ID", "Weight (kg)" },
                 3, new Color(121, 85, 72), a, e, d);
